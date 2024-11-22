@@ -39,14 +39,40 @@ function App() {
             mimeType: file.type
           }
         },
-        `Extract and format the text from this image maintaining the following:
-         - Preserve all headings with proper hierarchy (h1, h2, etc.)
-         - Maintain paragraph structure and spacing
-         - Format lists (bullet points and numbered lists)
-         - Preserve any tables with proper formatting
-         - Keep text styling (bold, italic) where visible
-         - Maintain any visible sections or content hierarchy
-         Please structure the response in markdown format.`
+        `Extract and format the text from this image, adhering to the following guidelines:
+
+1. Headings:
+   - Use '#' for h1, '##' for h2, and so on
+   - Ensure a single newline before and after each heading
+   - Do not use asterisks for headings
+
+2. Paragraphs:
+   - Maintain paragraph structure
+   - Separate paragraphs with a single blank line
+
+3. Lists:
+   - Use '-' for unordered lists
+   - Use '1.', '2.', etc. for numbered lists
+   - Use 'a.', 'b.', etc. for alphabetical lists
+   - Use 'i.', 'ii.', 'iii.', etc. for Roman numeral lists
+   - Ensure each list item starts on a new line
+   - Only use list formatting when the original content clearly shows a list
+   - Ensure proper indentation for nested lists (use 2 spaces)
+
+4. Roman Numerals:
+   - When Roman numerals are used for sections or subsections, ensure they are on their own line
+   - Format as 'i.', 'ii.', 'iii.', etc., followed by a space and the content
+
+5. Text Styling:
+   - Use single '*' for italic and double '**' for bold text
+   - Do not use excessive asterisks
+
+6. General Formatting:
+   - Preserve the original structure of the document
+   - Ensure proper spacing and indentation throughout the document
+   - Use a single newline to separate different elements (e.g., between a heading and a paragraph)
+
+Please structure the response in clean, well-formatted Markdown, closely matching the original document's layout and structure.`
       ]);
 
       const response = await result.response;

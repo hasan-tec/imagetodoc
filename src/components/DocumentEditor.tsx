@@ -11,6 +11,9 @@ import TableRow from '@tiptap/extension-table-row';
 import TableCell from '@tiptap/extension-table-cell';
 import TableHeader from '@tiptap/extension-table-header';
 import Typography from '@tiptap/extension-typography';
+import ListItem from '@tiptap/extension-list-item';
+import BulletList from '@tiptap/extension-bullet-list';
+import OrderedList from '@tiptap/extension-ordered-list';
 import { EditorToolbar } from './EditorToolbar';
 import { formatContent } from '../utils/textFormatter';
 
@@ -28,7 +31,11 @@ export function DocumentEditor({ initialContent }: DocumentEditorProps) {
 
   const editor = useEditor({
     extensions: [
-      StarterKit,
+      StarterKit.configure({
+        heading: {
+          levels: [1, 2, 3, 4, 5, 6],
+        },
+      }),
       Underline,
       TextAlign.configure({
         types: ['heading', 'paragraph'],
@@ -43,6 +50,21 @@ export function DocumentEditor({ initialContent }: DocumentEditorProps) {
       TableCell,
       TableHeader,
       Typography,
+      BulletList.configure({
+        HTMLAttributes: {
+          class: 'list-disc pl-5',
+        },
+      }),
+      OrderedList.configure({
+        HTMLAttributes: {
+          class: 'list-decimal pl-5',
+        },
+      }),
+      ListItem.configure({
+        HTMLAttributes: {
+          class: 'pl-1 mb-1',
+        },
+      }),
     ],
     content: formattedContent,
     editorProps: {

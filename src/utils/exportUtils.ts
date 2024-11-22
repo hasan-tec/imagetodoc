@@ -14,7 +14,18 @@ const htmlToDocx = (html: string): (Paragraph | Table)[] => {
       switch (node.nodeName) {
         case 'P':
           return new Paragraph({
-            children: Array.from(node.childNodes).map(child => new TextRun((child as Text).textContent || '')),
+            children: Array.from(node.childNodes).map(child => {
+              if (child.nodeType === Node.TEXT_NODE) {
+                return new TextRun((child as Text).textContent || '');
+              } else if (child instanceof HTMLElement) {
+                if (child.nodeName === 'STRONG') {
+                  return new TextRun({ text: child.textContent || '', bold: true });
+                } else if (child.nodeName === 'EM') {
+                  return new TextRun({ text: child.textContent || '', italics: true });
+                }
+              }
+              return new TextRun((child as Text).textContent || '');
+            }),
           });
         case 'H1':
         case 'H2':
@@ -29,7 +40,13 @@ const htmlToDocx = (html: string): (Paragraph | Table)[] => {
         case 'UL':
         case 'OL':
           return new Paragraph({
-            children: Array.from(node.childNodes).map(li => new TextRun(`• ${(li as HTMLLIElement).textContent || ''}\n`)),
+            children: Array.from(node.childNodes).map((li, index) => {
+              const bullet = node.nodeName === 'UL' ? '•' : `${index + 1}.`;
+              return new TextRun(`${bullet} ${(li as HTMLLIElement).textContent || ''}\n`);
+            }),
+            bullet: {
+              level: 0,
+            },
           });
         case 'TABLE':
           const rows = Array.from(node.querySelectorAll('tr')).map(tr => 
@@ -37,6 +54,12 @@ const htmlToDocx = (html: string): (Paragraph | Table)[] => {
               children: Array.from(tr.querySelectorAll('td, th')).map(cell => 
                 new TableCell({
                   children: [new Paragraph({children: [new TextRun(cell.textContent || '')]})],
+                  borders: {
+                    top: { style: BorderStyle.SINGLE, size: 1 },
+                    bottom: { style: BorderStyle.SINGLE, size: 1 },
+                    left: { style: BorderStyle.SINGLE, size: 1 },
+                    right: { style: BorderStyle.SINGLE, size: 1 },
+                  },
                 })
               ),
             })
@@ -51,15 +74,22 @@ const htmlToDocx = (html: string): (Paragraph | Table)[] => {
     return null;
   };
 
-  doc.body.childNodes.forEach(node => {
-    const element = processNode(node);
-    if (element) {
-      elements.push(element);
-    }
-  });
+  const processChildren = (parent: Node) => {
+    parent.childNodes.forEach(node => {
+      const element = processNode(node);
+      if (element) {
+        elements.push(element);
+      } else if (node.hasChildNodes()) {
+        processChildren(node);
+      }
+    });
+  };
+
+  processChildren(doc.body);
 
   return elements;
 };
+
 
 // Improved function to export content as PDF
 export const exportToPDF = async (content: string, fileName: string = 'document.pdf'): Promise<void> => {
@@ -141,6 +171,7 @@ export const exportToWord = async (content: string, fileName: string = 'document
     throw new Error('Failed to export document as Word file');
   }
 };
+
 
 // Function to determine file type and call appropriate export function
 export const exportDocument = (content: string, fileType: 'pdf' | 'docx', fileName?: string): Promise<void> => {
