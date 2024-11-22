@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import Underline from '@tiptap/extension-underline';
@@ -12,14 +12,20 @@ import TableCell from '@tiptap/extension-table-cell';
 import TableHeader from '@tiptap/extension-table-header';
 import Typography from '@tiptap/extension-typography';
 import { EditorToolbar } from './EditorToolbar';
-import ReactMarkdown from 'react-markdown';
-import { markdownPlugins } from '../utils/textFormatter';
+import { formatContent } from '../utils/textFormatter';
 
 interface DocumentEditorProps {
   initialContent: string;
 }
 
 export function DocumentEditor({ initialContent }: DocumentEditorProps) {
+  const [formattedContent, setFormattedContent] = useState('');
+
+  useEffect(() => {
+    const formatted = formatContent(initialContent);
+    setFormattedContent(formatted);
+  }, [initialContent]);
+
   const editor = useEditor({
     extensions: [
       StarterKit,
@@ -38,19 +44,19 @@ export function DocumentEditor({ initialContent }: DocumentEditorProps) {
       TableHeader,
       Typography,
     ],
-    content: '',
+    content: formattedContent,
     editorProps: {
       attributes: {
         class: 'prose prose-sm sm:prose lg:prose-lg xl:prose-2xl mx-auto focus:outline-none',
       },
     },
-    onMount: ({ editor }) => {
-      // Convert markdown to HTML and set as initial content
-      const contentElement = document.createElement('div');
-      contentElement.innerHTML = `<ReactMarkdown plugins={markdownPlugins}>${initialContent}</ReactMarkdown>`;
-      editor.commands.setContent(contentElement.innerHTML);
-    },
   });
+
+  useEffect(() => {
+    if (editor && formattedContent) {
+      editor.commands.setContent(formattedContent);
+    }
+  }, [editor, formattedContent]);
 
   if (!editor) {
     return null;
@@ -67,3 +73,4 @@ export function DocumentEditor({ initialContent }: DocumentEditorProps) {
     </div>
   );
 }
+

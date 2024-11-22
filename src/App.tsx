@@ -5,7 +5,6 @@ import { Loader } from './components/Loader';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { Toaster, toast } from 'react-hot-toast';
 import { FileText, Upload } from 'lucide-react';
-import { formatGeminiResponse } from './utils/textFormatter';
 
 const genAI = new GoogleGenerativeAI('AIzaSyD6FVqyNDXEQnbyfgUHGZk2vQFI0MgDoo4');
 
@@ -57,8 +56,7 @@ function App() {
         throw new Error('No text could be extracted from the image');
       }
       
-      const formattedContent = formatGeminiResponse(text);
-      setContent(formattedContent);
+      setContent(text);
       toast.success('Text extracted successfully!');
     } catch (error) {
       console.error('Error processing image:', error);
@@ -110,3 +108,4 @@ function App() {
 }
 
 export default App;
+
