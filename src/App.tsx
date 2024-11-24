@@ -12,34 +12,37 @@ function App() {
   const [loading, setLoading] = useState(false);
   const [content, setContent] = useState('');
 
-  const processImage = async (file: File) => {
+  const processImages = async (files: File[]) => {
     try {
       setLoading(true);
       
       const MAX_FILE_SIZE = 4 * 1024 * 1024;
-      if (file.size > MAX_FILE_SIZE) {
-        throw new Error('File size exceeds 4MB limit');
+      const validFiles = files.filter(file => file.size <= MAX_FILE_SIZE);
+
+      if (validFiles.length === 0) {
+        throw new Error('No valid files to process');
       }
 
-      const reader = new FileReader();
-      const base64Promise = new Promise((resolve) => {
-        reader.onload = () => resolve(reader.result);
-        reader.readAsDataURL(file);
-      });
-      
-      const base64Data = await base64Promise;
-      const base64String = (base64Data as string).split(',')[1];
+      const extractTextPromises = validFiles.map(async (file) => {
+        const reader = new FileReader();
+        const base64Promise = new Promise((resolve) => {
+          reader.onload = () => resolve(reader.result);
+          reader.readAsDataURL(file);
+        });
+        
+        const base64Data = await base64Promise;
+        const base64String = (base64Data as string).split(',')[1];
 
-      const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
-      
-      const result = await model.generateContent([
-        {
-          inlineData: {
-            data: base64String,
-            mimeType: file.type
-          }
-        },
-        `Extract and format the text from this image, adhering to the following guidelines:
+        const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+        
+        const result = await model.generateContent([
+          {
+            inlineData: {
+              data: base64String,
+              mimeType: file.type
+            }
+          },
+          `Extract and format the text from this image, adhering to the following guidelines:
 
 1. Headings:
    - Use '#' for h1, '##' for h2, and so on
@@ -73,20 +76,20 @@ function App() {
    - Use a single newline to separate different elements (e.g., between a heading and a paragraph)
 
 Please structure the response in clean, well-formatted Markdown, closely matching the original document's layout and structure.`
-      ]);
+        ]);
 
-      const response = await result.response;
-      const text = response.text();
+        const response = await result.response;
+        return response.text();
+      });
+
+      const extractedTexts = await Promise.all(extractTextPromises);
+      const combinedText = extractedTexts.join('\n\n---\n\n');
       
-      if (!text) {
-        throw new Error('No text could be extracted from the image');
-      }
-      
-      setContent(text);
-      toast.success('Text extracted successfully!');
+      setContent(combinedText);
+      toast.success('Text extracted successfully from all valid images!');
     } catch (error) {
-      console.error('Error processing image:', error);
-      toast.error(error instanceof Error ? error.message : 'Failed to process image. Please try again.');
+      console.error('Error processing images:', error);
+      toast.error(error instanceof Error ? error.message : 'Failed to process images. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -115,12 +118,12 @@ Please structure the response in clean, well-formatted Markdown, closely matchin
             <div className="max-w-xl mx-auto">
               <div className="text-center">
                 <Upload className="mx-auto h-12 w-12 text-blue-600" />
-                <h2 className="mt-4 text-xl font-semibold text-gray-900">Upload an image</h2>
+                <h2 className="mt-4 text-xl font-semibold text-gray-900">Upload images</h2>
                 <p className="mt-2 text-sm text-gray-600">
-                  Upload an image containing text to extract and edit (max 4MB)
+                  Upload one or more images containing text to extract and edit (max 4MB each)
                 </p>
               </div>
-              <FileUploader onFileSelect={processImage} />
+              <FileUploader onFilesSelect={processImages} />
             </div>
           </div>
         ) : (

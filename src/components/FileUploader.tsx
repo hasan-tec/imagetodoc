@@ -1,27 +1,28 @@
 import React, { useCallback } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { Upload } from 'lucide-react';
+import { toast } from 'react-hot-toast';
 
 interface FileUploaderProps {
-  onFileSelect: (file: File) => void;
+  onFilesSelect: (files: File[]) => void;
 }
 
-export function FileUploader({ onFileSelect }: FileUploaderProps) {
+export function FileUploader({ onFilesSelect }: FileUploaderProps) {
   const onDrop = useCallback((acceptedFiles: File[]) => {
     if (acceptedFiles.length > 0) {
-      onFileSelect(acceptedFiles[0]);
+      onFilesSelect(acceptedFiles);
     }
-  }, [onFileSelect]);
+  }, [onFilesSelect]);
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
     accept: {
       'image/*': ['.png', '.jpg', '.jpeg', '.gif', '.bmp']
     },
-    multiple: false,
+    multiple: true,
     maxSize: 4 * 1024 * 1024, // 4MB
     onDropRejected: () => {
-      toast.error('File too large or invalid format. Please use an image under 4MB.');
+      toast.error('One or more files are too large or in an invalid format. Please use images under 4MB.');
     }
   });
 
@@ -34,17 +35,18 @@ export function FileUploader({ onFileSelect }: FileUploaderProps) {
       <input {...getInputProps()} />
       <Upload className="mx-auto h-12 w-12 text-gray-400" />
       {isDragActive ? (
-        <p className="mt-2 text-sm text-gray-600">Drop the image here...</p>
+        <p className="mt-2 text-sm text-gray-600">Drop the images here...</p>
       ) : (
         <div>
           <p className="mt-2 text-sm text-gray-600">
-            Drag and drop an image here, or click to select
+            Drag and drop images here, or click to select
           </p>
           <p className="mt-1 text-xs text-gray-500">
-            Supports PNG, JPG, JPEG, GIF, BMP (max 4MB)
+            Supports PNG, JPG, JPEG, GIF, BMP (max 4MB each)
           </p>
         </div>
       )}
     </div>
   );
 }
+
