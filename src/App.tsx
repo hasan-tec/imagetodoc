@@ -6,7 +6,7 @@ import { GoogleGenerativeAI } from '@google/generative-ai';
 import { Toaster, toast } from 'react-hot-toast';
 import { FileText, Upload } from 'lucide-react';
 
-const genAI = new GoogleGenerativeAI('AIzaSyDZ6o76hZD-ikcZYqqfRN06IAqI9n3iRv0');
+const genAI = new GoogleGenerativeAI(import.meta.env.VITE_GOOGLE_API_KEY);
 
 function App() {
   const [loading, setLoading] = useState(false);
